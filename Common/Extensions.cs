@@ -48,6 +48,7 @@ using QuantConnect.Util;
 using Timer = System.Timers.Timer;
 using static QuantConnect.StringExtensions;
 using System.Runtime.CompilerServices;
+using Microsoft.IO;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Securities.Option;
 
@@ -58,6 +59,8 @@ namespace QuantConnect
     /// </summary>
     public static class Extensions
     {
+        private static readonly RecyclableMemoryStreamManager MemoryManager = new RecyclableMemoryStreamManager();
+
         private static readonly Dictionary<IntPtr, PythonActivator> PythonActivators
             = new Dictionary<IntPtr, PythonActivator>();
 
@@ -68,7 +71,7 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this List<Tick> ticks)
         {
-            using (var stream = new MemoryStream())
+            using (var stream = MemoryManager.GetStream())
             {
                 Serializer.Serialize(stream, ticks);
                 return stream.ToArray();
@@ -82,7 +85,7 @@ namespace QuantConnect
         /// <returns>The resulting byte array</returns>
         public static byte[] ProtobufSerialize(this IBaseData baseData)
         {
-            using (var stream = new MemoryStream())
+            using (var stream = MemoryManager.GetStream())
             {
                 switch (baseData.DataType)
                 {
